@@ -1,0 +1,11 @@
+numpy==2.3.0
+pandas==2.3.0
+scipy==1.15.2
+h5py==3.14.0
+lightning==2.5.2
+pytorch-lightning==2.5.2
+torchmetrics==1.7.3
+pydantic==2.11.7
+scikit-learn==1.7.0
+joblib==1.5.1
+wfdb==4.2.0
