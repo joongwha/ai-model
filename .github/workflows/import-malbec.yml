@@ -1,0 +1,46 @@
+name: Import published MALBEC release
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/import-malbec.yml']
+permissions:
+  contents: write
+jobs:
+  import-release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import the authors' GPL-3.0 source at a fixed commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          src="$RUNNER_TEMP/upstream"
+          rev=9f9dc7d22663345cffee67c52068149e4cff8ab4
+          git init --quiet "$src"
+          git -C "$src" fetch -q --depth=1 https://gitlab.com/usbch/crib/malbec/training-and-validation-of-a-12-lead-ecg-based-deep-learning-model-for-myocardial-infarction-subtypes.git "$rev"
+          test "$(git -C "$src" rev-parse FETCH_HEAD)" = "$rev"
+          mkdir -p malbec/upstream
+          git -C "$src" archive "$rev" | tar -x -C malbec/upstream
+          git add --force malbec/upstream
+          if ! git diff --staged --quiet; then
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "Import official MALBEC source and calibration files at 9f9dc7d"
+            git push origin HEAD:main
+          fi
+      - name: Mirror verified Zenodo checkpoint as a release asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          filename=finetuned_18d5a8abc508439a82786289b8f67ccc.ckpt
+          tag=malbec-zenodo-2.0.0
+          cd "$RUNNER_TEMP"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern "$filename"
+            echo "293f5f9b5317c279172d9f1f3b8dadc67d23513ccc058e93db15352d8b5fc986  $filename" | sha256sum --check -
+          else
+            curl --fail --silent --show-error --location --retry 3 --max-time 400 -o "$filename" "https://zenodo.org/records/19627196/files/$filename?download=1"
+            echo "293f5f9b5317c279172d9f1f3b8dadc67d23513ccc058e93db15352d8b5fc986  $filename" | sha256sum --check -
+            gh release create "$tag" "$filename" --repo "$GITHUB_REPOSITORY" --target main --title 'MALBEC checkpoint · Zenodo v2.0.0' --notes 'Unmodified checkpoint by Zimmermann, Strebel et al., University Hospital Basel. Source: https://zenodo.org/records/19627196 · GPL-3.0 · SHA-256: 293f5f9b5317c279172d9f1f3b8dadc67d23513ccc058e93db15352d8b5fc986.'
+          fi
