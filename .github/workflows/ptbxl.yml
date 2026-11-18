@@ -38,3 +38,34 @@ jobs:
             results/selection.json
             results/predictions.json
             results/ptbxl_ecg.png
+            results/*_hr.hea
+            results/*_hr.dat
+  publish-public-example:
+    needs: infer
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency: malbec-public-example
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/download-artifact@v4
+        with:
+          name: malbec-ptbxl-result
+          path: ${{ runner.temp }}/ptb-result
+      - name: Save public reference record and measured results
+        env:
+          SOURCE: ${{ runner.temp }}/ptb-result
+        run: |
+          set -euo pipefail
+          dest=malbec/results/ptbxl
+          mkdir -p "$dest"
+          cp "$SOURCE"/{selection.json,predictions.json,ptbxl_ecg.png} "$dest"
+          cp "$SOURCE"/*_hr.{dat,hea} "$dest"
+          git add "$dest"
+          if ! git diff --staged --quiet; then
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "Save measured outputs and source waveform for the public PTB-XL case"
+            git push origin HEAD:main
+          fi

@@ -55,7 +55,7 @@ def select_case(csv_path):
         if not any(labels.get(key, 0) == 100 for key in ANTERIOR_CODES):
             continue
         stage = str(r.infarction_stadium1).strip()
-        if not re.fullmatch(r"(?:stad\.?\s*)?I", stage, re.I):
+        if not re.fullmatch(r"(?:stad(?:ium)?\.?\s*)?I", stage, re.I):
             continue
         report = str(r.report)
         # Stage I indicates an acute annotation. Prefer reports that explicitly
