@@ -1,0 +1,28 @@
+name: Review PTB-XL annotations
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/ptbxl-annotations.yml']
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Print human-reviewed anterior MI reports before waveform inference
+        shell: python
+        run: |
+          import ast
+          import csv
+          import io
+          from urllib.request import urlopen
+          url = 'https://physionet.org/files/ptb-xl/1.0.3/ptbxl_database.csv'
+          with urlopen(url, timeout=60) as response:
+              reader = csv.DictReader(io.TextIOWrapper(response, encoding='utf-8'))
+              for row in reader:
+                  codes = ast.literal_eval(row['scp_codes'])
+                  stage = row['infarction_stadium1']
+                  if (row['validated_by_human'] == 'True' and stage == 'Stadium I'
+                          and any(codes.get(k) == 100 for k in ('AMI', 'ASMI', 'ALMI'))):
+                      print(row['ecg_id'], row['strat_fold'], row['report'])
