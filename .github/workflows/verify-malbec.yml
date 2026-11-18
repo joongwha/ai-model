@@ -1,0 +1,33 @@
+name: Verify MALBEC sources
+on:
+  push:
+    paths: ['.github/workflows/verify-malbec.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Read official GitLab source and revision
+        run: |
+          git clone --depth=1 https://gitlab.com/usbch/crib/malbec/training-and-validation-of-a-12-lead-ecg-based-deep-learning-model-for-myocardial-infarction-subtypes.git upstream
+          cd upstream
+          git rev-parse HEAD
+          git ls-files
+          cat README*
+      - name: Verify official checkpoint and example inputs
+        run: |
+          set -euo pipefail
+          mkdir zenodo
+          cd zenodo
+          for file in finetuned_18d5a8abc508439a82786289b8f67ccc.ckpt ecgs_dummy.h5 outcome_dummy.csv; do
+            curl --fail --location --retry 3 --output "$file" "https://zenodo.org/records/19627196/files/$file?download=1"
+          done
+          md5sum --check <<'CHECKSUMS'
+          48e63efb34c798ac32816faf54dfb480  finetuned_18d5a8abc508439a82786289b8f67ccc.ckpt
+          13e94d35af39d3314486652645f0058a  ecgs_dummy.h5
+          9f00e43b44f519acbce4eb2ab72696df  outcome_dummy.csv
+          CHECKSUMS
+          sha256sum *
