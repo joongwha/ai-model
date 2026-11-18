@@ -1,0 +1,3 @@
+*.ckpt
+/src/__pycache__/
+/src/lightning_logs/

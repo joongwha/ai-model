@@ -1,0 +1,6 @@
+ECSE_BK_hash,stemi_hd_v2,nstemi_hd_v2,nstemi_type1_hd_v2,nstemi_type2_hd_v2,other_hd_v2,non_hd_v2
+nstemi_type1,0,1,1,0,0,0
+stemi,1,0,0,0,0,0
+nstemi_type2,0,1,0,1,0,0
+non,0,0,0,0,0,0
+omi,1,0,0,0,0,0
