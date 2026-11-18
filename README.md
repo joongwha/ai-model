@@ -5,6 +5,12 @@
 - [선택한 PTB-XL 심전도](malbec/results/ptbxl/ptbxl_ecg.png) · [원 신호 및 헤더](malbec/results/ptbxl/) · [선정 기준과 원 판독](malbec/results/ptbxl/selection.json) · [실제 모델 출력](malbec/results/ptbxl/predictions.json)
 - [공식 Python 소스 및 저자 노트북](malbec/upstream/src/) · [검증된 모델 체크포인트](https://github.com/joongwha/ai-model/releases/tag/malbec-zenodo-2.0.0) · [GitHub Actions 실행 기록](https://github.com/joongwha/ai-model/actions/workflows/ptbxl.yml)
 
+## 실행 결과
+
+PTB-XL **13913번**에서 원 모델의 STEMI sigmoid 점수는 **0.99983585**, 저자들의 isotonic 보정 후 출력은 **1.000000**이었습니다. 후자는 보정 함수의 최댓값입니다. 사람이 검토한 참조 판독은 V2–V4에서 특히 두드러지는 ST 상승과 III의 ST 하강을 동반한 최근 전벽·측벽 심근경색입니다. 모델은 STEMI를 분류하며 경색 위치나 관상동맥 폐색을 직접 판정하지 않습니다. 이 공개 증례 한 건만으로 진단 정확도를 추정할 수 없습니다. [성공한 GitHub Actions 실행](https://github.com/joongwha/ai-model/actions/runs/44300214483)
+
+![PTB-XL 13913의 심전도](malbec/results/ptbxl/ptbxl_ecg.png)
+
 ## 재실행
 
 GitHub의 **Actions → Run MALBEC on PTB-XL → Run workflow**를 실행하거나, 로컬 Python 3.11 환경에서 아래 명령을 사용합니다. 체크포인트는 위 릴리스에서 받아 저장소 최상위에 둡니다.
