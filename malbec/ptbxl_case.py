@@ -58,16 +58,18 @@ def select_case(csv_path):
         if not re.fullmatch(r"(?:stad(?:ium)?\.?\s*)?I", stage, re.I):
             continue
         report = str(r.report)
-        # Stage I indicates an acute annotation. Prefer reports that explicitly
-        # mention an anterior territory and acute presentation or ST elevation.
+        # Use whole words so 'subakuter' cannot match 'akut'. An explicit
+        # acute MI report takes precedence over the structured stage.
         anterior = re.search(r"vorderwand|anterior|anterosept|anterolat", report, re.I)
-        acute = re.search(r"akut|frisch|acute|injury|st.?hebung|st.?elev", report, re.I)
-        if not anterior:
+        acute = re.search(r"\b(?:akut\w*|frisch\w*|acute|fresh)\b", report, re.I)
+        equivocal = re.search(r"subakut|subacute|aneurys|persistierend|fraglich|verdacht|questionable|suspect|nicht frisch|kein(?:e[rsnm]?)?\s+(?:akut|frisch)", report, re.I)
+        if not (anterior and acute) or equivocal:
             continue
-        priority = (not bool(acute), r.strat_fold != 10, int(r.ecg_id))
+        elevation = re.search(r"st[ -]?(?:strecken[ -]?)?(?:hebung|elev)", report, re.I)
+        priority = (not bool(elevation), r.strat_fold != 10, int(r.ecg_id))
         candidates.append((priority, r))
     if not candidates:
-        raise ValueError("No human-validated stage I anterior MI with a matching report")
+        raise ValueError("No definite stage I anterior infarct with explicit acute wording in a human-validated report")
     r = min(candidates, key=lambda pair: pair[0])[1]
     return {"ecg_id": int(r.ecg_id), "report": r.report, "stage": r.infarction_stadium1,
             "scp_codes": ast.literal_eval(r.scp_codes), "fold": int(r.strat_fold),
